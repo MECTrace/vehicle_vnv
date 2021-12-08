@@ -60,11 +60,11 @@ public class SendingThread implements Runnable {
         body.add("signature", getSignatureResource(file, vehicleCert));
 
         long beforeTime = System.currentTimeMillis();
-        log.info("데이터 전송 시작 :: {}", beforeTime);
+        log.info("데이터 전송 시작 current time ms :: {}", beforeTime);
         ResponseEntity<String> response = sendRequest(body, vehicleCert);
         long afterTime = System.currentTimeMillis();
         long secDiffTime = (afterTime - beforeTime)/1000;
-        log.info("데이터 전송 완료 :: {}", afterTime);
+        log.info("데이터 전송 완료 current time ms :: {}", afterTime);
         log.info("소요시간 :: {}", secDiffTime);
 
         isSuccess(response);
@@ -119,16 +119,13 @@ public class SendingThread implements Runnable {
         EdgeNode edge = EdgeNode.values()[new Random().nextInt(4)];
 
         // TODO :: 로컬테스트용 아래 주석 풀고 사용
-
+/*
         return getRestTemplate(vehicleCert)
                 .postForEntity("https://127.0.0.1:8443/api/edge/upload/vehicle/", requestEntity, String.class);
+ */
 
-
-        /*
         return getRestTemplate(vehicleCert)
                 .postForEntity("https://" + edge.getIP() + ":8443/api/edge/upload/vehicle/", requestEntity, String.class);
-
-        */
 
     }
 
@@ -136,12 +133,12 @@ public class SendingThread implements Runnable {
     @SneakyThrows
     private RestTemplate getRestTemplate(VehicleCert cert) {
 
-        log.info("--- 차량 인증서 정보 start ---");
+        log.info("------------------------차량 인증서 정보 start------------------------");
         log.info("CERTPATH :: {} ", cert.getCertPath());
         log.info("CERT-ALIAS :: {} ", cert.getCertAlias());
         log.info("TRUST_STORE_PATH :: {} ", cert.getTrustStorePath());
         log.info("AS URI >>>>> {}", Paths.get(cert.getCertPath()).toUri().toURL());
-        log.info("--- 차량 인증서 정보 end ---");
+        log.info("------------------------차량 인증서 정보 end------------------------");
 
         SSLContext sslContext = new SSLContextBuilder()
                 .loadKeyMaterial(Paths.get(cert.getCertPath()).toUri().toURL(), cert.getCertPassword().toCharArray(), cert.getCertPassword().toCharArray())
