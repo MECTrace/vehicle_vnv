@@ -134,12 +134,14 @@ public class SendingThread implements Runnable {
     @SneakyThrows
     private RestTemplate getRestTemplate(VehicleCert cert) {
 
+        /*
         log.info("------------------------------------------------");
         log.info("                  차량 인증서 정보                   ");
         log.info("------------------------------------------------");
         log.info("CERTPATH :: {} ", cert.getCertPath());
         log.info("CERT-ALIAS :: {} ", cert.getCertAlias());
         log.info("TRUST_STORE_PATH :: {} ", cert.getTrustStorePath());
+         */
         // log.info("AS URI >>>>> {}", Paths.get(cert.getCertPath()).toUri().toURL());
 
         SSLContext sslContext = new SSLContextBuilder()
