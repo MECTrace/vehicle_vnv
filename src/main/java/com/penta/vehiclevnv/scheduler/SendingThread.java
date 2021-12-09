@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.util.StopWatch;
 import org.springframework.web.client.RestTemplate;
 
 import javax.net.ssl.SSLContext;
@@ -59,13 +60,13 @@ public class SendingThread implements Runnable {
         body.add("file", new FileSystemResource(file));
         body.add("signature", getSignatureResource(file, vehicleCert));
 
-        long beforeTime = System.currentTimeMillis();
-        log.info("데이터 전송 시작 current time ms :: {}", beforeTime);
+        log.info("데이터 전송 시작");
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start("Send data to Edge");
         ResponseEntity<String> response = sendRequest(body, vehicleCert);
-        long afterTime = System.currentTimeMillis();
-        long secDiffTime = (afterTime - beforeTime)/1000;
-        log.info("데이터 전송 완료 current time ms :: {}", afterTime);
-        log.info("소요시간 :: {}", secDiffTime);
+        stopWatch.stop();
+        log.info("데이터 전송 완료");
+        System.out.println(stopWatch.prettyPrint());
 
         isSuccess(response);
 
@@ -133,12 +134,13 @@ public class SendingThread implements Runnable {
     @SneakyThrows
     private RestTemplate getRestTemplate(VehicleCert cert) {
 
-        log.info("------------------------차량 인증서 정보 start------------------------");
+        log.info("------------------------------------------------");
+        log.info("                  차량 인증서 정보                   ");
+        log.info("------------------------------------------------");
         log.info("CERTPATH :: {} ", cert.getCertPath());
         log.info("CERT-ALIAS :: {} ", cert.getCertAlias());
         log.info("TRUST_STORE_PATH :: {} ", cert.getTrustStorePath());
-        log.info("AS URI >>>>> {}", Paths.get(cert.getCertPath()).toUri().toURL());
-        log.info("------------------------차량 인증서 정보 end------------------------");
+        // log.info("AS URI >>>>> {}", Paths.get(cert.getCertPath()).toUri().toURL());
 
         SSLContext sslContext = new SSLContextBuilder()
                 .loadKeyMaterial(Paths.get(cert.getCertPath()).toUri().toURL(), cert.getCertPassword().toCharArray(), cert.getCertPassword().toCharArray())
