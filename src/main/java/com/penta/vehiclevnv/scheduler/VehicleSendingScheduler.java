@@ -5,6 +5,8 @@ import com.penta.vehiclevnv.constant.VehicleCertMap;
 import com.penta.vehiclevnv.domain.VehicleCert;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -26,7 +28,8 @@ import java.util.stream.Stream;
 
 @Component
 @Slf4j
-public class VehicleSendingScheduler {
+public class VehicleSendingScheduler implements ApplicationListener<ContextClosedEvent> {
+
 
     private VehicleCertMap vehicleCertMap;
 
@@ -48,6 +51,25 @@ public class VehicleSendingScheduler {
         Files.createDirectories(doneLocation);
     }
 
+    @Override
+    public void onApplicationEvent(ContextClosedEvent event) {
+
+        int success = SendingThread.count.getSuccess().get();
+        int fail = SendingThread.count.getFail().get();
+        int others = SendingThread.count.getOthers().get();
+        log.info("-----------------------------------------");
+        log.info("                 summary                 ");
+        log.info("-----------------------------------------");
+        log.info("SUCCESS :: {}",success);
+        log.info("FAIL :: {}",fail);
+        log.info("OTHERS :: {}",others);
+        log.info("TOTAL :: {}",success + fail + others);
+        log.info("-----------------------------------------");
+
+        log.info("Application 종료");
+        log.info("종료시간 :: {}",event.getTimestamp());
+
+    }
 
     @Scheduled(fixedDelay = 60000)
     @SneakyThrows
@@ -90,9 +112,7 @@ public class VehicleSendingScheduler {
         } else {
             log.info("------- {} 에 파일이 존재하지 않음 -------",this.targetLocation.toString());
         }
-
     }
-
 
     @SneakyThrows
     private boolean verifyFile(String fileName) {
@@ -116,5 +136,5 @@ public class VehicleSendingScheduler {
     }
 
 
-}
 
+}

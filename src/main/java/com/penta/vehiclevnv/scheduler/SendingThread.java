@@ -1,6 +1,7 @@
 package com.penta.vehiclevnv.scheduler;
 
 import com.penta.vehiclevnv.constant.EdgeNode;
+import com.penta.vehiclevnv.domain.Count;
 import com.penta.vehiclevnv.domain.VehicleCert;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +40,7 @@ public class SendingThread implements Runnable {
     private VehicleCert vehicleCert;
     private Path targetLocation;
     private Path doneLocation;
-
+    public static final Count count = new Count();
 
     public SendingThread(String carNo, File file, VehicleCert vehicleCert, Path targetLocation, Path doneLocation) {
         this.carNo = carNo;
@@ -76,13 +77,16 @@ public class SendingThread implements Runnable {
     private boolean isSuccess(ResponseEntity<String> response) {
         // 5xx 응답 : edge server error
         if (String.valueOf(response.getStatusCodeValue()).startsWith("5")) {
+            count.countFail();
             log.error("송신결과 : [5xx FAIL] Response :: " + response);
             return false;
         } else if (String.valueOf(response.getStatusCodeValue()).startsWith("4")) {
             // 4xx 응답 : 요청 에러
+            count.countOthers();
             log.error("송신결과 : [4xx FAIL] Response :: " + response);
             return false;
         } else {
+            count.countSuccess();
             log.info("송신결과 : [SUCCESS] :: " + response);
             return true;
         }
