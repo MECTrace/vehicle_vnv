@@ -17,9 +17,12 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -33,6 +36,7 @@ public class VehicleSendingScheduler implements ApplicationListener<ContextClose
 
     private VehicleCertMap vehicleCertMap;
 
+    private final LocalDateTime start = LocalDateTime.now();
     private final Path targetLocation;
     private final Path doneLocation;
     private final Environment environment;
@@ -60,14 +64,14 @@ public class VehicleSendingScheduler implements ApplicationListener<ContextClose
         log.info("-----------------------------------------");
         log.info("                 summary                 ");
         log.info("-----------------------------------------");
-        log.info("SUCCESS :: {}",success);
-        log.info("FAIL :: {}",fail);
-        log.info("OTHERS :: {}",others);
-        log.info("TOTAL :: {}",success + fail + others);
+        log.info("SUCCESS  :: {}",success);
+        log.info("FAIL     :: {}",fail);
+        log.info("OTHERS   :: {}",others);
+        log.info("TOTAL    :: {}",success + fail + others);
         log.info("-----------------------------------------");
 
-        log.info("Application 종료");
-        log.info("종료시간 :: {}",event.getTimestamp());
+        log.info("Application 시작 일시 :: {}",this.start);
+        log.info("Application 종료 일시 :: {}",LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getTimestamp()), TimeZone.getDefault().toZoneId()));
 
     }
 

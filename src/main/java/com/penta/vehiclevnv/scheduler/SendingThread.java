@@ -66,7 +66,6 @@ public class SendingThread implements Runnable {
         stopWatch.start("Send data to Edge");
         ResponseEntity<String> response = sendRequest(body, vehicleCert);
         stopWatch.stop();
-        log.info("데이터 전송 완료");
         System.out.println(stopWatch.prettyPrint());
 
         isSuccess(response);
