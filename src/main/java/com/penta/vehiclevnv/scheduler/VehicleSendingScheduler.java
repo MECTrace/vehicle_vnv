@@ -71,7 +71,7 @@ public class VehicleSendingScheduler implements ApplicationListener<ContextClose
         log.info("-----------------------------------------");
 
         log.info("Application 시작 일시 :: {}",this.start);
-        log.info("Application 종료 일시 :: {}",LocalDateTime.ofInstant(Instant.ofEpochSecond(event.getTimestamp()), TimeZone.getDefault().toZoneId()));
+        log.info("Application 종료 일시 :: {}",LocalDateTime.ofInstant(Instant.ofEpochMilli(event.getTimestamp()), TimeZone.getDefault().toZoneId()));
 
     }
 
