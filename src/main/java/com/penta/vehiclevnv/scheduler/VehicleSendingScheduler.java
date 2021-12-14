@@ -4,7 +4,8 @@ import com.penta.vehiclevnv.configuration.FileInfoProperties;
 import com.penta.vehiclevnv.constant.VehicleCertMap;
 import com.penta.vehiclevnv.domain.VehicleCert;
 import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.core.env.Environment;
@@ -30,9 +31,9 @@ import java.util.stream.Stream;
 
 
 @Component
-@Slf4j
 public class VehicleSendingScheduler implements ApplicationListener<ContextClosedEvent> {
 
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private VehicleCertMap vehicleCertMap;
 
@@ -61,17 +62,17 @@ public class VehicleSendingScheduler implements ApplicationListener<ContextClose
         int success = SendingThread.count.getSuccess().get();
         int fail = SendingThread.count.getFail().get();
         int others = SendingThread.count.getOthers().get();
-        log.info("-----------------------------------------");
-        log.info("                 summary                 ");
-        log.info("-----------------------------------------");
-        log.info("SUCCESS  :: {}",success);
-        log.info("FAIL     :: {}",fail);
-        log.info("OTHERS   :: {}",others);
-        log.info("TOTAL    :: {}",success + fail + others);
-        log.info("-----------------------------------------");
+        logger.info("-----------------------------------------");
+        logger.info("                 summary                 ");
+        logger.info("-----------------------------------------");
+        logger.info("SUCCESS  :: {}",success);
+        logger.info("FAIL     :: {}",fail);
+        logger.info("OTHERS   :: {}",others);
+        logger.info("TOTAL    :: {}",success + fail + others);
+        logger.info("-----------------------------------------");
 
-        log.info("Application 시작 일시 :: {}",this.start);
-        log.info("Application 종료 일시 :: {}",LocalDateTime.ofInstant(Instant.ofEpochMilli(event.getTimestamp()), TimeZone.getDefault().toZoneId()));
+        logger.info("Application 시작 일시 :: {}",this.start);
+        logger.info("Application 종료 일시 :: {}",LocalDateTime.ofInstant(Instant.ofEpochMilli(event.getTimestamp()), TimeZone.getDefault().toZoneId()));
 
     }
 
@@ -79,7 +80,7 @@ public class VehicleSendingScheduler implements ApplicationListener<ContextClose
     @SneakyThrows
     public void sendToEdge() {
 
-        log.info("프로세스 시작");
+        logger.info("프로세스 시작");
 
         if (checkFilePresent(this.targetLocation)) {
 
@@ -114,7 +115,7 @@ public class VehicleSendingScheduler implements ApplicationListener<ContextClose
             }
 
         } else {
-            log.info("------- {} 에 파일이 존재하지 않음 -------",this.targetLocation.toString());
+            logger.info("------- {} 에 파일이 존재하지 않음 -------",this.targetLocation.toString());
         }
     }
 

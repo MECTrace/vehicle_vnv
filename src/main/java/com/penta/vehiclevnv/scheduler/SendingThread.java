@@ -4,21 +4,20 @@ import com.penta.vehiclevnv.constant.EdgeNode;
 import com.penta.vehiclevnv.domain.Count;
 import com.penta.vehiclevnv.domain.VehicleCert;
 import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.HttpClient;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContextBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StopWatch;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.net.ssl.SSLContext;
@@ -30,9 +29,7 @@ import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.Signature;
-import java.util.Random;
 
-@Slf4j
 public class SendingThread implements Runnable {
 
     private String carNo;
@@ -41,6 +38,8 @@ public class SendingThread implements Runnable {
     private Path targetLocation;
     private Path doneLocation;
     public static final Count count = new Count();
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public SendingThread(String carNo, File file, VehicleCert vehicleCert, Path targetLocation, Path doneLocation) {
         this.carNo = carNo;
@@ -61,14 +60,21 @@ public class SendingThread implements Runnable {
         body.add("file", new FileSystemResource(file));
         body.add("signature", getSignatureResource(file, vehicleCert));
 
-        log.info("데이터 전송 시작");
+        logger.info("데이터 전송 시작");
         StopWatch stopWatch = new StopWatch();
         stopWatch.start("Send data to Edge");
         ResponseEntity<String> response = sendRequest(body, vehicleCert);
         stopWatch.stop();
-        System.out.println(stopWatch.prettyPrint());
+        logger.info(stopWatch.prettyPrint());
 
         isSuccess(response);
+
+        int success = SendingThread.count.getSuccess().get();
+        int fail = SendingThread.count.getFail().get();
+        int others = SendingThread.count.getOthers().get();
+
+        logger.info("SUCCESS :: {}, FAIL :: {}, OTHERS :: {}, TOTAL :: {}", success,fail,others,success+fail+others);
+
 
     }
 
@@ -77,18 +83,19 @@ public class SendingThread implements Runnable {
         // 5xx 응답 : edge server error
         if (String.valueOf(response.getStatusCodeValue()).startsWith("5")) {
             count.countFail();
-            log.error("송신결과 : [5xx FAIL] Response :: " + response);
+            logger.info("송신결과 : [5xx FAIL] Response :: " + response);
             return false;
         } else if (String.valueOf(response.getStatusCodeValue()).startsWith("4")) {
             // 4xx 응답 : 요청 에러
             count.countOthers();
-            log.error("송신결과 : [4xx FAIL] Response :: " + response);
+            logger.info("송신결과 : [4xx FAIL] Response :: " + response);
             return false;
         } else {
             count.countSuccess();
-            log.info("송신결과 : [SUCCESS] :: " + response);
+            logger.info("송신결과 : [SUCCESS] :: " + response);
             return true;
         }
+
     }
 
     @SneakyThrows
@@ -119,17 +126,22 @@ public class SendingThread implements Runnable {
 
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, header);
 
-        // edge random 전송
-        EdgeNode edge = EdgeNode.values()[new Random().nextInt(4)];
 
         // TODO :: 로컬테스트용 아래 주석 풀고 사용
-/*
+        /*
         return getRestTemplate(vehicleCert)
                 .postForEntity("https://127.0.0.1:8443/api/edge/upload/vehicle/", requestEntity, String.class);
- */
+        */
+        ResponseEntity<String> response = null;
 
-        return getRestTemplate(vehicleCert)
-                .postForEntity("https://" + edge.getIP() + ":8443/api/edge/upload/vehicle/", requestEntity, String.class);
+        try {
+            response = getRestTemplate(vehicleCert)
+                    .postForEntity("https://" + EdgeNode.EDGE_NODE_1.getIP() + ":8888/api/edge/upload/vehicle/", requestEntity, String.class);
+        } catch(ResourceAccessException e) {
+            return new ResponseEntity<>("connection refused",HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        return response;
 
     }
 
